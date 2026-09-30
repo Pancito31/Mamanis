@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a1c4fd 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-cursive {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* Globos Flotantes */
+        .balloon {
+            position: absolute;
+            bottom: -100px;
+            width: 50px;
+            height: 65px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            animation: floatUp 8s linear infinite;
+            z-index: 1;
+            opacity: 0.85;
+        }
+
+        .balloon::after {
+            content: "";
+            position: absolute;
+            bottom: -12px;
+            left: 23px;
+            width: 2px;
+            height: 15px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.85;
+            }
+            100% {
+                transform: translateY(-120vh) rotate(20deg);
+                opacity: 0;
+            }
+        }
+
+        .cake {
+            position: relative;
+            width: 200px;
+            height: 140px;
+            margin: 0 auto;
+        }
+
+        .plate {
+            width: 240px;
+            height: 15px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            position: absolute;
+            bottom: 0;
+            left: -20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .layer {
+            position: absolute;
+            width: 200px;
+            border-radius: 15px 15px 10px 10px;
+            box-shadow: inset 0 -5px 0 rgba(0,0,0,0.05);
+        }
+
+        .layer-bottom {
+            bottom: 15px;
+            height: 50px;
+            background-color: #f472b6;
+        }
+
+        .layer-middle {
+            bottom: 55px;
+            height: 45px;
+            background-color: #fbbf24;
+        }
+
+        .layer-top {
+            bottom: 95px;
+            height: 40px;
+            background-color: #60a5fa;
+        }
+
+        .icing {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 15px;
+            background-color: #ffffff;
+            border-radius: 15px 15px 5px 5px;
+        }
+
+        /* Velas */
+        .candle {
+            position: absolute;
+            bottom: 135px;
+            width: 12px;
+            height: 35px;
+            background: repeating-linear-gradient(45deg, #f43f5e, #f43f5e 5px, #fff 5px, #fff 10px);
+            border-radius: 3px 3px 0 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .candle:hover {
+            transform: scale(1.1);
+        }
+
+        .flame {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 16px;
+            background-color: #f97316;
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 0 10px #f97316, 0 0 20px #facc15;
+            animation: flicker 0.6s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1) rotate(-2deg); }
+            100% { transform: translateX(-50%) scale(1.15) rotate(2deg); }
+        }
+
+        .flame.off {
+            display: none;
+        }
+
+        .smoke {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 15px;
+            background-color: rgba(200, 200, 200, 0.6);
+            border-radius: 50%;
+            animation: rise 1s forwards;
+            display: none;
+        }
+
+        @keyframes rise {
+            0% { opacity: 0.8; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-25px) scale(2); }
+        }
+
+        /* Fuegos Artificiales Canvas */
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between min-h-screen relative p-4 text-gray-800">
+
+    <!-- Canvas para Fuegos Artificiales -->
+    <canvas id="fireworksCanvas"></canvas>
+
+    <!-- Contenedor de Globos Dinámicos -->
+    <div id="balloon-container" class="fixed inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+    <!-- PANTALLA DE INICIO (PORTADA) -->
+    <div id="welcome-screen" class="fixed inset-0 flex flex-col items-center justify-center z-40 bg-pink-100 bg-opacity-95 p-6 text-center transition-opacity duration-700">
+        <div class="animate-bounce mb-6 text-6xl text-pink-500">
+            <i class="fa-solid fa-gift"></i>
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold font-cursive text-pink-600 mb-4 drop-shadow-md">
+            ¡Tienes una Sorpresa!
+        </h1>
+        <p class="text-lg md:text-xl text-gray-700 mb-8 max-w-md">
+            Un andino hizo una celebración especial para ti. ¿Estás listo para descubrirlo?
+        </p>
+        <button id="start-btn" class="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-xl rounded-full shadow-lg hover:from-pink-600 hover:to-rose-600 transform hover:scale-105 transition-all duration-300 border-2 border-white">
+            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ¡Comenzar Fiesta!
+        </button>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL DE LA CELEBRACIÓN -->
+    <header class="w-full max-w-4xl flex justify-between items-center z-10 py-4 px-2">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl text-pink-600"><i class="fa-solid fa-cake-candles"></i></span>
+            <span class="font-bold text-xl text-gray-700 tracking-wide">Happy Birthday</span>
+        </div>
+        <!-- Botón Reproductor de Música Synthesizer -->
+        <button id="music-btn" class="px-4 py-2 bg-white/80 backdrop-blur-md rounded-full shadow-md text-pink-600 font-semibold hover:bg-white transition flex items-center space-x-2 border border-pink-200">
+            <i id="music-icon" class="fa-solid fa-music"></i>
+            <span id="music-text">Música: OFF</span>
+        </button>
+    </header>
+
+    <main class="w-full max-w-3xl z-10 flex flex-col items-center my-auto space-y-8">
+        <!-- Título Principal -->
+        <div class="text-center">
+            <h1 class="text-5xl md:text-7xl font-extrabold font-cursive text-pink-600 drop-shadow-lg tracking-wider animate-pulse">
+                ¡Feliz Cumpleaños!
+            </h1>
+            <p class="text-md md:text-lg text-gray-700 mt-2 font-medium">
+                ¡Haz un deseo y sopla las velas! 🎂✨
+            </p>
+        </div>
+
+        <!-- PASTEL INTERACTIVO -->
+        <div class="relative py-8 my-4">
+            <div class="cake">
+                <div class="plate"></div>
+                <div class="layer layer-bottom"></div>
+                <div class="layer layer-middle"></div>
+                <div class="layer layer-top">
+                    <div class="icing"></div>
+                </div>
+
+                <!-- Velas -->
+                <div class="candle" style="left: 40px;">
+                    <div class="flame"></div>
+                    <div class="smoke"></div>
+                </div>
+                <div class="candle" style="left: 94px;">
+                    <div class="flame"></div>
+                    <div class="smoke"></div>
+                </div>
+                <div class="candle" style="left: 148px;">
+                    <div class="flame"></div>
+                    <div class="smoke"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción del Pastel -->
+        <div class="flex flex-wrap justify-center gap-4">
+            <button id="blow-btn" class="px-5 py-2.5 bg-rose-500 text-white font-semibold rounded-xl shadow-md hover:bg-rose-600 transition flex items-center space-x-2">
+                <i class="fa-solid fa-wind"></i>
+                <span>Soplar Velas</span>
+            </button>
+            <button id="relight-btn" class="px-5 py-2.5 bg-amber-500 text-white font-semibold rounded-xl shadow-md hover:bg-amber-600 transition flex items-center space-x-2">
+                <i class="fa-solid fa-fire"></i>
+                <span>Encender Velas</span>
+            </button>
+            <button id="fireworks-btn" class="px-5 py-2.5 bg-purple-600 text-white font-semibold rounded-xl shadow-md hover:bg-purple-700 transition flex items-center space-x-2">
+                <i class="fa-solid fa-burst"></i>
+                <span>Fuegos Artificiales</span>
+            </button>
+        </div>
+
+        <!-- CARTA/TARJETA DESPLEGABLE -->
+        <div class="w-full max-w-lg mt-6">
+            <div class="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-pink-100 transition-all duration-300">
+                <div class="flex justify-between items-center cursor-pointer" id="card-toggle">
+                    <h3 class="text-xl font-bold text-pink-600 flex items-center">
+                        <i class="fa-solid fa-envelope-open-text mr-3"></i> Una carta para ti
+                    </h3>
+                    <i id="card-chevron" class="fa-solid fa-chevron-down text-pink-500 transition-transform duration-300"></i>
+                </div>
+                
+                <div id="card-content" class="mt-4 pt-4 border-t border-pink-100 text-gray-700 leading-relaxed hidden">
+                    <p class="font-cursive text-2xl text-pink-500 mb-2">¡Querido descendiente mamani!</p>
+                    <p class="mb-3">
+                        En este día tan especial quiero desearte suerte en todo lo que te propongas, aún recuerdo cuando comias tierrita XD, pasalo bien con todos tus amigos.
+                    </p>
+                    <p class="mb-3">
+                        Que este nuevo año de vida esté lleno de metas cumplidas, risas inolvidables y momentos mágicos. ¡Nunca dejes de brillar! psdta: (Si llegas hacerte rica, me mantienes pe :c)
+                    </p>
+                    <p class="font-bold text-right text-pink-600 font-cursive text-xl">
+                        Con mucho cariño, ❤️
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="z-10 py-4 text-center text-xs text-gray-600">
+        ¡Creado para celebrarte! ✨
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        let audioCtx = null;
+        let isPlaying = false;
+        let isBlownOut = false;
+        let musicInterval = null;
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const startBtn = document.getElementById('start-btn');
+        const musicBtn = document.getElementById('music-btn');
+        const musicIcon = document.getElementById('music-icon');
+        const musicText = document.getElementById('music-text');
+        const blowBtn = document.getElementById('blow-btn');
+        const relightBtn = document.getElementById('relight-btn');
+        const fireworksBtn = document.getElementById('fireworks-btn');
+        const flames = document.querySelectorAll('.flame');
+        const smokes = document.querySelectorAll('.smoke');
+        const candles = document.querySelectorAll('.candle');
+        const cardToggle = document.getElementById('card-toggle');
+        const cardContent = document.getElementById('card-content');
+        const cardChevron = document.getElementById('card-chevron');
+
+        // Frecuencias de notas musicales para "Cumpleaños Feliz"
+        const NOTES = {
+            'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00,
+            'A4': 440.00, 'B4': 493.88, 'C5': 523.25, 'D5': 587.33
+        };
+
+        const melody = [
+            { note: 'C4', duration: 0.35 }, { note: 'C4', duration: 0.15 },
+            { note: 'D4', duration: 0.5 },  { note: 'C4', duration: 0.5 },
+            { note: 'F4', duration: 0.5 },  { note: 'E4', duration: 1.0 },
+
+            { note: 'C4', duration: 0.35 }, { note: 'C4', duration: 0.15 },
+            { note: 'D4', duration: 0.5 },  { note: 'C4', duration: 0.5 },
+            { note: 'G4', duration: 0.5 },  { note: 'F4', duration: 1.0 },
+
+            { note: 'C4', duration: 0.35 }, { note: 'C4', duration: 0.15 },
+            { note: 'C5', duration: 0.5 },  { note: 'A4', duration: 0.5 },
+            { note: 'F4', duration: 0.5 },  { note: 'E4', duration: 0.5 },
+            { note: 'D4', duration: 0.5 },
+
+            { note: 'A4', duration: 0.35 }, { note: 'A4', duration: 0.15 },
+            { note: 'F4', duration: 0.5 },  { note: 'G4', duration: 0.5 },
+            { note: 'F4', duration: 1.0 }
+        ];
+
+        function playNote(freq, duration) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'triangle'; // Tono suave estilo marimba/caja de música
+                osc.frequency.value = freq;
+                
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function playMelody() {
+            if (isPlaying) return;
+            isPlaying = true;
+            musicIcon.className = "fa-solid fa-pause";
+            musicText.innerText = "Música: ON";
+
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } else if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            let noteIndex = 0;
+
+            function scheduleNextNote() {
+                if (!isPlaying) return;
+                
+                const current = melody[noteIndex];
+                playNote(NOTES[current.note], current.duration);
+                
+                noteIndex = (noteIndex + 1) % melody.length;
+                musicInterval = setTimeout(scheduleNextNote, current.duration * 600);
+            }
+
+            scheduleNextNote();
+        }
+
+        function stopMelody() {
+            isPlaying = false;
+            clearTimeout(musicInterval);
+            musicIcon.className = "fa-solid fa-music";
+            musicText.innerText = "Música: OFF";
+        }
+
+        musicBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                stopMelody();
+            } else {
+                playMelody();
+            }
+        });
+
+        function createBalloons(count = 15) {
+            const container = document.getElementById('balloon-container');
+            const colors = ['#f43f5e', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b'];
+            
+            for (let i = 0; i < count; i++) {
+                const balloon = document.createElement('div');
+                balloon.className = 'balloon';
+                balloon.style.left = `${Math.random() * 95}%`;
+                balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                balloon.style.animationDuration = `${6 + Math.random() * 6}s`;
+                balloon.style.animationDelay = `${Math.random() * 5}s`;
+                container.appendChild(balloon);
+            }
+        }
+
+        function blowOutCandles() {
+            if (isBlownOut) return;
+            isBlownOut = true;
+
+            flames.forEach(flame => flame.classList.add('off'));
+            smokes.forEach(smoke => {
+                smoke.style.display = 'block';
+                setTimeout(() => { smoke.style.display = 'none'; }, 1000);
+            });
+
+            // Disparar confeti de celebración
+            triggerConfetti();
+            launchFireworks();
+        }
+
+        function relightCandles() {
+            isBlownOut = false;
+            flames.forEach(flame => flame.classList.remove('off'));
+        }
+
+        // Permite apagar individuales al hacer clic en cada vela
+        candles.forEach((candle, index) => {
+            candle.addEventListener('click', () => {
+                const flame = candle.querySelector('.flame');
+                const smoke = candle.querySelector('.smoke');
+                if (!flame.classList.contains('off')) {
+                    flame.classList.add('off');
+                    smoke.style.display = 'block';
+                    setTimeout(() => { smoke.style.display = 'none'; }, 1000);
+                } else {
+                    flame.classList.remove('off');
+                }
+            });
+        });
+
+        blowBtn.addEventListener('click', blowOutCandles);
+        relightBtn.addEventListener('click', relightCandles);
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.6 }
+            });
+        }
+
+        // Sistema de Fuegos Artificiales en Canvas
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 3 + 1;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: (Math.random() - 0.5) * 8
+                };
+                this.alpha = 1;
+                this.friction = 0.98;
+                this.gravity = 0.05;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.015;
+            }
+        }
+
+        function launchFireworks() {
+            const colors = ['#ff0055', '#00ddff', '#00ff66', '#ffcc00', '#ff00ff'];
+            for (let f = 0; f < 5; f++) {
+                setTimeout(() => {
+                    const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+                    const y = Math.random() * canvas.height * 0.5 + canvas.height * 0.1;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    for (let i = 0; i < 40; i++) {
+                        particles.push(new Particle(x, y, color));
+                    }
+                }, f * 250);
+            }
+        }
+
+        function animateFireworks() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((particle, index) => {
+                if (particle.alpha > 0) {
+                    particle.update();
+                    particle.draw();
+                } else {
+                    particles.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(animateFireworks);
+        }
+        animateFireworks();
+
+        fireworksBtn.addEventListener('click', () => {
+            launchFireworks();
+            triggerConfetti();
+        });
+
+        cardToggle.addEventListener('click', () => {
+            cardContent.classList.toggle('hidden');
+            cardChevron.classList.toggle('rotate-180');
+        });
+
+        startBtn.addEventListener('click', () => {
+            welcomeScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                welcomeScreen.style.display = 'none';
+            }, 700);
+
+            createBalloons(15);
+            triggerConfetti();
+            playMelody();
+        });
+    </script>
+</body>
+</html>
